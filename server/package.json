@@ -23,10 +23,10 @@
     "mongoose": "^9.8.1",
     "multer": "^2.4.0",
     "nodemailer": "^9.0.3",
-    "pdfkit": "^0.19.1"
+    "pdfkit": "^0.19.1",
+    "resend": "^6.28.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
   }
 }
-

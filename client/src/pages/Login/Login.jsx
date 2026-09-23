@@ -20,47 +20,97 @@ function Login() {
   const { login } = useAuth();
   const { showToast } = useToast();
   const googleButtonRef = useRef(null);
-
+  const [googleLoading, setGoogleLoading] = useState(true);
+  const [googleError, setGoogleError] = useState(false);
 
   useEffect(() => {
-    const scriptId = 'google-identity-script';
+    let isMounted = true;
+    let checkInterval = null;
 
-    const initializeGoogleSignIn = () => {
-      if (window.google && window.google.accounts && window.google.accounts.id) {
-        const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-
-        if (!clientId) {
-          console.error('VITE_GOOGLE_CLIENT_ID is missing - check client/.env');
-          return;
-        }
-
-        window.google.accounts.id.initialize({
-          client_id: clientId,
-          callback: handleGoogleResponse
-        });
-
-        if (googleButtonRef.current) {
-          window.google.accounts.id.renderButton(googleButtonRef.current, {
-            theme: 'outline',
-            size: 'large',
-            width: 300
-          });
-        }
-      }
-    };
-
-    if (document.getElementById(scriptId)) {
-      initializeGoogleSignIn();
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      console.error('VITE_GOOGLE_CLIENT_ID is missing - check client/.env');
+      setGoogleLoading(false);
+      setGoogleError(true);
       return;
     }
 
-    const script = document.createElement('script');
-    script.id = scriptId;
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = initializeGoogleSignIn;
-    document.body.appendChild(script);
+    const initAndRender = () => {
+      if (!window.google?.accounts?.id || !googleButtonRef.current) return false;
+
+      try {
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: handleGoogleResponse,
+        });
+
+        const containerWidth =
+          googleButtonRef.current.parentElement?.offsetWidth ||
+          googleButtonRef.current.offsetWidth ||
+          340;
+        const buttonWidth = Math.min(Math.max(containerWidth, 200), 400);
+
+        window.google.accounts.id.renderButton(googleButtonRef.current, {
+          type: 'standard',
+          theme: 'outline',
+          size: 'large',
+          text: 'signin_with',
+          shape: 'rectangular',
+          logo_alignment: 'left',
+          width: buttonWidth,
+        });
+
+        if (isMounted) {
+          setGoogleLoading(false);
+          setGoogleError(false);
+        }
+        return true;
+      } catch (err) {
+        console.error('Failed to initialize Google Sign-In:', err);
+        if (isMounted) {
+          setGoogleError(true);
+          setGoogleLoading(false);
+        }
+        return false;
+      }
+    };
+
+    if (!initAndRender()) {
+      let attempts = 0;
+      checkInterval = setInterval(() => {
+        attempts++;
+        if (initAndRender() || attempts > 50) {
+          clearInterval(checkInterval);
+          if (attempts > 50 && isMounted && !window.google?.accounts?.id) {
+            setGoogleLoading(false);
+            setGoogleError(true);
+          }
+        }
+      }, 100);
+    }
+
+    // Dynamic fallback if gsi script isn't loaded yet
+    const scriptId = 'google-identity-script';
+    if (!document.getElementById(scriptId) && !window.google?.accounts?.id) {
+      const script = document.createElement('script');
+      script.id = scriptId;
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      script.onload = () => initAndRender();
+      script.onerror = () => {
+        if (isMounted) {
+          setGoogleLoading(false);
+          setGoogleError(true);
+        }
+      };
+      document.head.appendChild(script);
+    }
+
+    return () => {
+      isMounted = false;
+      if (checkInterval) clearInterval(checkInterval);
+    };
   }, []);
 
   const handleGoogleResponse = async (response) => {
@@ -103,20 +153,7 @@ function Login() {
     }
   };
 
-  const handleGoogleClick = () => {
-    const realGoogleButton = googleButtonRef.current
-      ? googleButtonRef.current.querySelector('div[role="button"]')
-      : null;
 
-    if (realGoogleButton) {
-      realGoogleButton.click();
-    } else {
-      showToast(
-        'error',
-        'Google Sign-In is still loading. Please try again.'
-      );
-    }
-  };
 
   const openPasskeyModal = () => {
     setShowPasskeyModal(true);
@@ -201,7 +238,7 @@ function Login() {
             className="logo-image"
           />
 
-          <h1>Infinetra HRMS</h1>
+          <h1 style={{ color: "#e9ebefff" }}>Infinetra HRMS</h1>
 
           <p className="brand-description">
             Elevating productivity through intelligent employee management and seamless human resource workflows.
@@ -343,24 +380,30 @@ function Login() {
               <span></span>
             </div>
 
-            <div
-              ref={googleButtonRef}
-              style={{
-                position: 'absolute',
-                top: '-9999px',
-                left: '-9999px'
-              }}
-            ></div>
-
-            <button
-              type="button"
-              className="btn-google"
-              onClick={handleGoogleClick}
-              disabled={loading}
-            >
-              <span className="google-icon">G</span>
-              &nbsp;&nbsp;Sign in with Google
-            </button>
+            <div className="google-signin-wrapper">
+              {googleLoading && (
+                <div className="google-btn-loading">
+                  <span className="google-icon">G</span>
+                  &nbsp;&nbsp;Loading Google Sign-In...
+                </div>
+              )}
+              {googleError && !googleLoading && (
+                <div
+                  className="google-btn-error"
+                  onClick={() => window.location.reload()}
+                  role="button"
+                  tabIndex={0}
+                  title="Click to retry loading Google Sign-In"
+                >
+                  <span className="google-icon">⚠️</span>
+                  &nbsp;&nbsp;Google Sign-In unavailable (Click to retry)
+                </div>
+              )}
+              <div
+                ref={googleButtonRef}
+                className={`google-btn-slot ${googleLoading || googleError ? 'google-btn-hidden' : ''}`}
+              ></div>
+            </div>
 
           </form>
 

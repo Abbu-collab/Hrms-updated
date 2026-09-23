@@ -358,9 +358,9 @@ export const createEmployee = async (req, res) => {
     // Send welcome email with login credentials if mailer configured
     if (isNewUserCreated && targetEmail && assignedPassword) {
       try {
-        if (transporter && process.env.EMAIL && process.env.EMAIL_PASS) {
-          await transporter.sendMail({
-            from: process.env.EMAIL,
+        if (transporter?.emails?.send && (process.env.RESEND_API_KEY || process.env.EMAIL)) {
+          await transporter.emails.send({
+            from: process.env.RESEND_FROM || "HRMS <noreply@team2026.online>",
             to: targetEmail,
             subject: "Welcome to Infinetra HRMS - Your Login Credentials",
             html: `

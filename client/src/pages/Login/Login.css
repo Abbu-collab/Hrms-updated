@@ -87,7 +87,7 @@ html:has(.login-container) {
 
 .brand-description {
   font-size: 0.9rem;
-  color: #94a3b8;
+  color: #e5e8ed;
   line-height: 1.65;
   margin: 0;
 }
@@ -415,8 +415,47 @@ html:has(.login-container) {
   white-space: nowrap;
 }
 
-/* ── Google Button ── */
-.login-form-box .btn-google {
+/* ── Google Button Container & States ── */
+.google-signin-wrapper {
+  position: relative;
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.google-btn-slot {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 44px;
+}
+
+.google-btn-slot.google-btn-hidden {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  height: 0;
+  overflow: hidden;
+}
+
+.google-btn-slot > div {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+}
+
+.google-btn-slot iframe {
+  margin: 0 auto !important;
+  border-radius: 10px !important;
+}
+
+.google-btn-loading,
+.google-btn-error {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -426,18 +465,17 @@ html:has(.login-container) {
   background: #fff;
   border: 1.5px solid #cbd5e1;
   border-radius: 10px;
-  color: #334155;
+  color: #64748b;
   font-size: 0.875rem;
   font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  user-select: none;
 }
 
-.login-form-box .btn-google:hover {
-  background: #f8fafc;
-  border-color: #94a3b8;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.07);
+.google-btn-error {
+  color: #dc2626;
+  border-color: #fca5a5;
+  background: #fef2f2;
+  cursor: pointer;
 }
 
 .google-icon {

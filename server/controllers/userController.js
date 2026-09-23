@@ -5,7 +5,7 @@ import { generateNextEmployeeCode } from "./EmployeeController.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import FORGOT from '../models/forgotModel.js';
-import transporter from '../config/mail.js';
+import resend from '../config/mail.js';
 import dotenv from 'dotenv';
 dotenv.config()
 
@@ -312,19 +312,21 @@ export const EmpOtp=async(req ,res)=>{
             {email},{
                 email,
                 otp,
-                otpExpiry:Date.now()+5*60*1000
+                otpExpiry:Date.now()+10*60*1000
             },
             {
                 upsert:true,
                 returnDocument:"after"
             }
         );
-        await transporter.verify();
-        await transporter.sendMail({
-            from:process.env.EMAIL,
-            to:email,
-            subject:"password Reset OTP",
-            text:`Your OTP is ${otp}.It is valid for 5 min`
+        await resend.emails.send({
+          from: 'HRMS <noreply@team2026.online>',
+          to: [email],
+          subject: 'Your HRMS OTP',
+          html: `
+            <h2>Your OTP is ${otp}</h2>
+            <p>This OTP is valid for 10 minutes.</p>
+          `
         });
         return res.status(200).json({success:true,message:"OTP send Successfully"})
 

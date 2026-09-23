@@ -5,6 +5,7 @@ import Employee from "../models/Employee.js";
 import transporter from "../config/mail.js";
 
 // Keep reference to initial transporter method to detect test stubbing
+const defaultResendSend = transporter?.emails?.send;
 const defaultTransporterSendMail = transporter?.sendMail;
 
 /**
@@ -186,14 +187,11 @@ export const resolveRecipientDetails = async (recipient) => {
 };
 
 /**
- * Send an email notification using Nodemailer transporter.
+ * Send an email notification using Resend (or Nodemailer fallback).
  * Fails gracefully — logs errors without throwing.
  */
-export const sendNotificationEmail = async ({ to, subject, html }) => {
+export const sendNotificationEmail = async ({ to, subject, html, text }) => {
   if (!to || !String(to).trim()) return null;
-
-  const sender = (process.env.EMAIL || "").trim();
-  const pass = (process.env.EMAIL_PASS || "").replace(/\s+/g, "");
 
   // In test environment without an explicit test mock, skip real network SMTP calls
   const isRunningInTest =
@@ -202,25 +200,43 @@ export const sendNotificationEmail = async ({ to, subject, html }) => {
     Boolean(process.env.NODE_TEST_CONTEXT) ||
     process.argv.some((arg) => typeof arg === "string" && (arg.includes("test") || arg.includes(".test.")));
 
-  const isMockedByTest = transporter?.sendMail !== defaultTransporterSendMail;
+  const isMockedByTest =
+    (Boolean(transporter?.emails?.send) && transporter.emails.send !== defaultResendSend) ||
+    (Boolean(transporter?.sendMail) && transporter.sendMail !== defaultTransporterSendMail);
 
   if (isRunningInTest && !isMockedByTest) {
     return null;
   }
 
-  if (!sender || !pass) {
-    console.warn("sendNotificationEmail: EMAIL credentials not set in .env — skipping email.");
+  const apiKey = (process.env.RESEND_API_KEY || "").trim();
+  if (!isMockedByTest && !apiKey && !process.env.EMAIL) {
+    console.warn("sendNotificationEmail: RESEND_API_KEY not set in .env — skipping email.");
     return null;
   }
 
   try {
-    if (typeof transporter?.sendMail === "function") {
-      return await transporter.sendMail({
-        from: `HRMS Notifications <${sender}>`,
-        to: String(to).trim(),
-        subject,
-        html,
-      });
+    const sender =
+      process.env.RESEND_FROM ||
+      (process.env.EMAIL && !process.env.EMAIL.endsWith("@gmail.com")
+        ? process.env.EMAIL
+        : "HRMS Notifications <noreply@team2026.online>");
+
+    const mailOptions = {
+      from: sender,
+      to: String(to).trim(),
+      subject,
+      html,
+      ...(text ? { text } : {}),
+    };
+
+    if (typeof transporter?.emails?.send === "function") {
+      const result = await transporter.emails.send(mailOptions);
+      if (result?.error) {
+        console.error(`sendNotificationEmail Resend error for recipient (${to}):`, result.error);
+      }
+      return result;
+    } else if (typeof transporter?.sendMail === "function") {
+      return await transporter.sendMail(mailOptions);
     }
   } catch (err) {
     console.error(`sendNotificationEmail error for recipient (${to}):`, err.message);
@@ -324,8 +340,8 @@ export const sendTaskSubmissionEmail = async ({
   attachmentUrl,
   version = 1,
 }) => {
-  if (!process.env.EMAIL || !process.env.EMAIL_PASS) {
-    console.warn("sendTaskSubmissionEmail: EMAIL credentials not set in .env — skipping email.");
+  if (!process.env.RESEND_API_KEY && !process.env.EMAIL) {
+    console.warn("sendTaskSubmissionEmail: RESEND_API_KEY not set in .env — skipping email.");
     return;
   }
 
@@ -354,12 +370,18 @@ export const sendTaskSubmissionEmail = async ({
       </div>
     `;
 
-    await transporter.sendMail({
-      from: `HRMS Task System <${process.env.EMAIL}>`,
+    const mailOptions = {
+      from: process.env.RESEND_FROM || "HRMS Task System <noreply@team2026.online>",
       to,
       subject: `New Task Submission: ${taskTitle} by ${employeeName}`,
       html,
-    });
+    };
+
+    if (typeof transporter?.emails?.send === "function") {
+      await transporter.emails.send(mailOptions);
+    } else if (typeof transporter?.sendMail === "function") {
+      await transporter.sendMail(mailOptions);
+    }
   } catch (err) {
     console.error("sendTaskSubmissionEmail error:", err.message);
   }
@@ -378,8 +400,8 @@ export const sendTaskAssignmentEmail = async ({
   description,
   notes,
 }) => {
-  if (!process.env.EMAIL || !process.env.EMAIL_PASS) {
-    console.warn("sendTaskAssignmentEmail: EMAIL credentials not set in .env — skipping email.");
+  if (!process.env.RESEND_API_KEY && !process.env.EMAIL) {
+    console.warn("sendTaskAssignmentEmail: RESEND_API_KEY not set in .env — skipping email.");
     return;
   }
 
@@ -430,12 +452,18 @@ export const sendTaskAssignmentEmail = async ({
       </div>
     `;
 
-    await transporter.sendMail({
-      from: `HRMS Task System <${process.env.EMAIL}>`,
+    const mailOptions = {
+      from: process.env.RESEND_FROM || "HRMS Task System <noreply@team2026.online>",
       to,
       subject: `New Task Assigned: ${taskTitle} [${priority || "MEDIUM"}]`,
       html,
-    });
+    };
+
+    if (typeof transporter?.emails?.send === "function") {
+      await transporter.emails.send(mailOptions);
+    } else if (typeof transporter?.sendMail === "function") {
+      await transporter.sendMail(mailOptions);
+    }
   } catch (err) {
     console.error("sendTaskAssignmentEmail error:", err.message);
   }
@@ -452,8 +480,8 @@ export const sendTaskReviewEmail = async ({
   decision,
   comments,
 }) => {
-  if (!process.env.EMAIL || !process.env.EMAIL_PASS) {
-    console.warn("sendTaskReviewEmail: EMAIL credentials not set in .env — skipping email.");
+  if (!process.env.RESEND_API_KEY && !process.env.EMAIL) {
+    console.warn("sendTaskReviewEmail: RESEND_API_KEY not set in .env — skipping email.");
     return;
   }
 
@@ -491,12 +519,18 @@ export const sendTaskReviewEmail = async ({
       </div>
     `;
 
-    await transporter.sendMail({
-      from: `HRMS Task System <${process.env.EMAIL}>`,
+    const mailOptions = {
+      from: process.env.RESEND_FROM || "HRMS Task System <noreply@team2026.online>",
       to,
       subject: `${headerTitle}: ${taskTitle}`,
       html,
-    });
+    };
+
+    if (typeof transporter?.emails?.send === "function") {
+      await transporter.emails.send(mailOptions);
+    } else if (typeof transporter?.sendMail === "function") {
+      await transporter.sendMail(mailOptions);
+    }
   } catch (err) {
     console.error("sendTaskReviewEmail error:", err.message);
   }

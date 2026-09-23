@@ -19,6 +19,7 @@ describe("Centralized In-App & Email Notification System", () => {
   let originalEmployeeFindById;
   let originalEmployeeFindOne;
   let originalTransporterSendMail;
+  let originalResendSend;
   let sentEmails = [];
 
   const mockOrg = { _id: "org_1", name: "Infinetra Innovations" };
@@ -44,6 +45,7 @@ describe("Centralized In-App & Email Notification System", () => {
     originalEmployeeFindById = Employee.findById;
     originalEmployeeFindOne = Employee.findOne;
     originalTransporterSendMail = transporter.sendMail;
+    originalResendSend = transporter?.emails?.send;
 
     // Stub Notification.create to return the document in memory
     Notification.create = async (doc) => ({ _id: "notif_mock_123", ...doc });
@@ -66,11 +68,15 @@ describe("Centralized In-App & Email Notification System", () => {
       then: (resolve) => resolve(String(id) === String(mockEmployee._id) ? mockEmployee : null),
     });
 
-    // Mock transporter.sendMail to capture sent emails
-    transporter.sendMail = async (options) => {
+    // Mock transporter.emails.send and transporter.sendMail to capture sent emails
+    const mockSend = async (options) => {
       sentEmails.push(options);
-      return { messageId: "mock-msg-123" };
+      return { data: { id: "mock-msg-123" }, messageId: "mock-msg-123", error: null };
     };
+    if (transporter?.emails) {
+      transporter.emails.send = mockSend;
+    }
+    transporter.sendMail = mockSend;
   });
 
   afterEach(() => {
@@ -78,6 +84,9 @@ describe("Centralized In-App & Email Notification System", () => {
     UserModel.findById = originalUserFindById;
     Employee.findById = originalEmployeeFindById;
     Employee.findOne = originalEmployeeFindOne;
+    if (transporter?.emails) {
+      transporter.emails.send = originalResendSend;
+    }
     transporter.sendMail = originalTransporterSendMail;
   });
 
@@ -175,11 +184,15 @@ describe("Centralized In-App & Email Notification System", () => {
     assert.match(sentEmails[0].html, /has been approved/i);
   });
 
-  test("5. SMTP failure does NOT throw or prevent notification creation", async () => {
-    // Simulate SMTP network failure (e.g. ECONNREFUSED)
-    transporter.sendMail = async () => {
+  test("5. SMTP / Email failure does NOT throw or prevent notification creation", async () => {
+    // Simulate email dispatch failure
+    const failSend = async () => {
       throw new Error("connect ECONNREFUSED 127.0.0.1:587");
     };
+    if (transporter?.emails) {
+      transporter.emails.send = failSend;
+    }
+    transporter.sendMail = failSend;
 
     const notif = await createNotification({
       recipient: mockUser._id,
