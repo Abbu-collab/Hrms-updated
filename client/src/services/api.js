@@ -1,4 +1,6 @@
-const API_URL = "/api";
+import { API_BASE } from "./apiConfig.js";
+
+const API_URL = API_BASE;
 
 const parseJsonSafely = async (res) => {
   const text = await res.text();

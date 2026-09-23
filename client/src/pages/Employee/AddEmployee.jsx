@@ -235,7 +235,7 @@ export default function AddEmployee() {
                     textDecoration: "none",
                   }}
                 >
-                  http://localhost:5173/login <FiExternalLink size={13} />
+                  {`${window.location.origin}/login`} <FiExternalLink size={13} />
                 </a>
               </div>
 

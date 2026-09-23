@@ -1,6 +1,7 @@
 import axios from "axios";
+import { API_BASE } from "./apiConfig.js";
 
-const API_URL = "http://localhost:5000/api/leave-balance";
+const API_URL = `${API_BASE}/leave-balance`;
 
 // JWT Authorization Header
 const getAuthHeader = () => {

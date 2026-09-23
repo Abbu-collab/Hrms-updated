@@ -1,4 +1,6 @@
-const API_URL = 'http://localhost:5000/api';
+import { API_BASE } from './services/apiConfig.js';
+
+const API_URL = API_BASE;
 
 export const registerUser = async (userData) => {
   const response = await fetch(`${API_URL}/newEmp`, {

@@ -1,6 +1,7 @@
 import axios from "axios";
+import { API_BASE } from "./apiConfig.js";
 
-const API = "http://localhost:5000/api/notifications";
+const API = `${API_BASE}/notifications`;
 
 const getAuthConfig = () => ({
   headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
