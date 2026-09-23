@@ -45,10 +45,33 @@ import { errorHandler, notFoundHandler } from "./middlewares/errorHandler.js";
 
 const app = express();
 
-app.use(cors({
-    origin: "http://localhost:5173",
+const allowedOrigins = [
+  "https://hrms2026.onrender.com",
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://localhost:5174",
+  process.env.CLIENT_URL,
+]
+  .filter(Boolean)
+  .map((origin) => origin.replace(/\/$/, ""));
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const normalized = origin.replace(/\/$/, "");
+      if (
+        allowedOrigins.includes(normalized) ||
+        normalized.endsWith(".onrender.com") ||
+        normalized.endsWith(".vercel.app")
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
     credentials: true,
-}));
+  })
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

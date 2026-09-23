@@ -369,7 +369,7 @@ export const createEmployee = async (req, res) => {
                 <p>Hello <strong>${populatedEmployee?.user_id?.name || "Team Member"}</strong>,</p>
                 <p>Your employee profile has been created in the HR portal. Below are your login credentials to access your account:</p>
                 <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; margin: 15px 0;">
-                  <p style="margin: 6px 0;"><strong>Portal URL:</strong> <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/login">${process.env.CLIENT_URL || 'http://localhost:5173'}/login</a></p>
+                  <p style="margin: 6px 0;"><strong>Portal URL:</strong> <a href="${(process.env.CLIENT_URL || 'https://hrms2026.onrender.com').replace(/\/$/, '')}/login">${(process.env.CLIENT_URL || 'https://hrms2026.onrender.com').replace(/\/$/, '')}/login</a></p>
                   <p style="margin: 6px 0;"><strong>Email Address:</strong> ${targetEmail}</p>
                   <p style="margin: 6px 0;"><strong>Temporary Password:</strong> <code style="background: #e2e8f0; padding: 3px 8px; border-radius: 4px; font-weight: bold; color: #1e293b;">${assignedPassword}</code></p>
                 </div>

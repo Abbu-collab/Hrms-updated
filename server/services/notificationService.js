@@ -73,7 +73,7 @@ export const buildNotificationEmailHtml = ({
   orgName = "HRMS",
   link = "",
 }) => {
-  const portalUrl = process.env.CLIENT_URL || "http://localhost:5173";
+  const portalUrl = (process.env.CLIENT_URL || "https://hrms2026.onrender.com").replace(/\/$/, "");
   const actionButton = link
     ? `
       <div style="margin: 24px 0 16px 0; text-align: left;">
