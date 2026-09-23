@@ -1,4 +1,5 @@
-const PROFILE_URL = "/api/employees/profile";
+import { API_BASE } from "./apiConfig.js";
+const PROFILE_URL = `${API_BASE}/employees/profile`;
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
@@ -36,7 +37,7 @@ export const updateMyEmployeeProfile = async (profileData) => {
 
 export const getAllDepartments = async () => {
   const token = localStorage.getItem("token");
-  const res = await fetch("/api/departments", {
+  const res = await fetch(`${API_BASE}/departments`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",

@@ -1,4 +1,5 @@
-const API_BASE_URL = "/api";
+import { API_BASE } from "./apiConfig.js";
+const API_BASE_URL = API_BASE;
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");

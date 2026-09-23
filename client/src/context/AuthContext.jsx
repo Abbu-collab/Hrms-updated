@@ -1,4 +1,5 @@
 import { createContext, useContext, useMemo, useState, useEffect } from "react";
+import { API_BASE } from "../services/apiConfig.js";
 
 const AuthContext = createContext(null);
 
@@ -64,7 +65,7 @@ export function AuthProvider({ children }) {
       if (!token) return;
 
       try {
-        const res = await fetch('/api/profile', {
+        const res = await fetch(`${API_BASE}/profile`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -72,10 +73,10 @@ export function AuthProvider({ children }) {
           }
         });
 
-        if (!res.ok) {
-          // token invalid or expired
+        if (res.status === 401 || res.status === 403) {
+          // token explicitly invalid or expired
           logout();
-        } else {
+        } else if (res.ok) {
           const data = await res.json();
           // ensure local user matches server
           if (data?.user) {
@@ -84,7 +85,7 @@ export function AuthProvider({ children }) {
           }
         }
       } catch (err) {
-        logout();
+        console.warn("Auth token validation network error:", err?.message);
       }
     };
 

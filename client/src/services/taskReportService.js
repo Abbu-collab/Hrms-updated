@@ -1,4 +1,5 @@
-const API_BASE = "/api/task-reports";
+import { API_BASE as ROOT_API_BASE } from "./apiConfig.js";
+const API_BASE = `${ROOT_API_BASE}/task-reports`;
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");

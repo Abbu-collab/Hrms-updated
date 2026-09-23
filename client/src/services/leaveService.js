@@ -1,6 +1,7 @@
 import axios from "axios";
+import { API_BASE } from "./apiConfig.js";
 
-const API_URL = "/api/leave";
+const API_URL = `${API_BASE}/leave`;
 
 
 // JWT Authorization Header

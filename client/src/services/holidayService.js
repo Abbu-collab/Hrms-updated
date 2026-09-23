@@ -1,4 +1,5 @@
-const API_BASE = "/api/holidays";
+import { API_BASE as ROOT_API_BASE } from "./apiConfig.js";
+const API_BASE = `${ROOT_API_BASE}/holidays`;
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");

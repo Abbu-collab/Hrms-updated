@@ -1,4 +1,5 @@
-const API_BASE = "/api/documents";
+import { API_BASE as ROOT_API_BASE } from "./apiConfig.js";
+const API_BASE = `${ROOT_API_BASE}/documents`;
 
 const getAuthHeaders = (isMultipart = false) => {
   const token = localStorage.getItem("token");

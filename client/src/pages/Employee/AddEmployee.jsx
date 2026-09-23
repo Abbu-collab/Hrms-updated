@@ -6,6 +6,7 @@ import EmployeeForm from "../../components/employee/EmployeeForm.jsx";
 import { createEmployee, getAllEmployees } from "../../services/employeeService.js";
 import { getAllDepartments } from "../../services/profileService.js";
 import { createOnboarding } from "../../services/onboardingService.js";
+import { API_BASE } from "../../services/apiConfig.js";
 import "../../components/employee/emp.shared.css";
 import "../../components/employee/EmployeeForm.css";
 import {
@@ -24,7 +25,7 @@ import Modal, { ModalHeader, ModalBody, ModalFooter } from "../../components/Mod
 
 async function fetchUsers() {
   const token = localStorage.getItem("token");
-  const res = await fetch("/api/users", {
+  const res = await fetch(`${API_BASE}/users`, {
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,

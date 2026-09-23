@@ -1,4 +1,5 @@
-const API_BASE = "/api/super-admin";
+import { API_BASE as ROOT_API_BASE } from "./apiConfig.js";
+const API_BASE = `${ROOT_API_BASE}/super-admin`;
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
